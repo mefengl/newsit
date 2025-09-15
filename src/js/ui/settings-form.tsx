@@ -1,15 +1,10 @@
 import React from "react";
-import { PlacementType } from "../shared/models";
 import { createSettingsFormController } from "./settings-form.controller";
 
 const sfc = createSettingsFormController();
 
-const formBtnsLocation = sfc.GetFormBtnsLocation();
-
 interface SettingsFormProps {
   isPopupPage: boolean;
-  onClickCheck?(): void;
-  isLoading?: boolean;
 }
 
 interface SettingsFormState {
@@ -18,9 +13,6 @@ interface SettingsFormState {
   hasDebugEnabled: boolean;
   hideWhenNoResults: boolean;
   useNewRedditLinks: boolean;
-  btnsPlacement: PlacementType;
-  formBtnsSize: number;
-  formZindex: number;
   blackListAlteredStr: string;
   blackListStr: string;
 }
@@ -35,9 +27,6 @@ export class SettingsForm extends React.Component<
     hasDebugEnabled: false,
     hideWhenNoResults: false,
     useNewRedditLinks: false,
-    btnsPlacement: "br" as PlacementType,
-    formBtnsSize: 1,
-    formZindex: 999,
     blackListAlteredStr: "",
     blackListStr: "",
   };
@@ -58,14 +47,8 @@ export class SettingsForm extends React.Component<
         blackListStr: blackListStr,
       });
     });
-    sfc.ListenPlacementChanged((v) => {
-      ctx.setState({ btnsPlacement: v });
-    });
     sfc.ListenNoResultsChanged((v) => {
       ctx.setState({ hideWhenNoResults: v });
-    });
-    sfc.ListenBtnSizeChanged((v) => {
-      ctx.setState({ formBtnsSize: v });
     });
     sfc.ListenIsEnabledChanged((v) => {
       ctx.setState({ hasAllEnabled: v });
@@ -75,9 +58,6 @@ export class SettingsForm extends React.Component<
     });
     sfc.ListenConsoleDebugChanged((v) => {
       ctx.setState({ hasDebugEnabled: v });
-    });
-    sfc.ListenZindexChanged((v) => {
-      ctx.setState({ formZindex: v });
     });
   }
 
@@ -106,24 +86,6 @@ export class SettingsForm extends React.Component<
     this.setState({ useNewRedditLinks: value });
   }
 
-  onBtnsLocationChanged(e: React.ChangeEvent<HTMLSelectElement>) {
-    const value = e.target.value as PlacementType;
-    sfc.SetPlacement(value);
-    this.setState({ btnsPlacement: value });
-  }
-
-  onFormBtnsSizeChanged(e: React.ChangeEvent<HTMLInputElement>) {
-    const value = +e.target.value;
-    this.setState({ formBtnsSize: value });
-    sfc.SetBtnSize(value);
-  }
-
-  onFormZindexChanged(e: React.ChangeEvent<HTMLInputElement>): void {
-    const value = +e.target.value;
-    this.setState({ formZindex: value });
-    sfc.SetZindex(value);
-  }
-
   onSaveHosts() {
     const newHosts = this.state.blackListAlteredStr;
     const newHostArr = newHosts.split("\n");
@@ -135,15 +97,12 @@ export class SettingsForm extends React.Component<
       hasCurrentEnabled,
       hasAllEnabled,
       hasDebugEnabled,
-      btnsPlacement,
-      formBtnsSize,
-      formZindex,
       blackListAlteredStr,
       blackListStr,
       hideWhenNoResults,
       useNewRedditLinks,
     } = this.state;
-    const { isPopupPage, onClickCheck, isLoading } = this.props;
+    const { isPopupPage } = this.props;
 
     return (
       <div
@@ -152,26 +111,11 @@ export class SettingsForm extends React.Component<
       >
         <section className="form">
           {isPopupPage && (
-            <>
-              <div className="field">
-                <div className="control has-text-centered pt-2">
-                  <button
-                    onClick={(e) => !isLoading && onClickCheck()}
-                    disabled={isLoading}
-                    className={
-                      "button is-info " + (isLoading ? "is-loading" : "")
-                    }
-                  >
-                    Check Current Page
-                  </button>
-                </div>
-              </div>
-              <CheckBox
-                value={hasCurrentEnabled}
-                onChange={(e) => this.onCurrentEnabledChanged(e)}
-                title="Enabled on this website"
-              />
-            </>
+            <CheckBox
+              value={hasCurrentEnabled}
+              onChange={(e) => this.onCurrentEnabledChanged(e)}
+              title="Enabled on this website"
+            />
           )}
           <CheckBox
             value={hasAllEnabled}
@@ -210,7 +154,6 @@ export class SettingsForm extends React.Component<
               <div className="control has-text-centered pt-1">
                 <button
                   onClick={(e) => this.onSaveHosts()}
-                  disabled={isLoading}
                   className="button is-info"
                 >
                   Save Hosts
@@ -218,67 +161,6 @@ export class SettingsForm extends React.Component<
               </div>
             </div>
           )}
-          <div className="field">
-            <label className="label">Links Location</label>
-            <div className="control">
-              <div className="select">
-                <select
-                  value={btnsPlacement}
-                  onChange={(e) => this.onBtnsLocationChanged(e)}
-                >
-                  <option disabled value="">
-                    Nothing selected
-                  </option>
-                  {formBtnsLocation.map((item) => {
-                    return (
-                      <option value={item.value} key={item.value}>
-                        {item.text}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-            </div>
-          </div>
-          <div className="field">
-            <label className="label">Link Size</label>
-            <div className="control">
-              <input
-                type="range"
-                value={formBtnsSize}
-                onChange={(e) => this.onFormBtnsSizeChanged(e)}
-                min="0.2"
-                max="2"
-                step="0.05"
-              />
-              <span>{formBtnsSize}</span>
-            </div>
-            <div style={{ height: "90px" }}>
-              <img
-                id="btnsPreview"
-                src="https://i.imgur.com/dVvDrfN.png"
-                style={{
-                  width: "100px",
-                  transformOrigin: "top left",
-                  transform: `scale(${formBtnsSize})`,
-                }}
-              />
-            </div>
-          </div>
-          <div className="field">
-            <label className="label">Buttons Z-index</label>
-            <div className="control">
-              <input
-                type="number"
-                value={formZindex}
-                onChange={(e) => this.onFormZindexChanged(e)}
-                min="1"
-                max="9999"
-                step="1"
-              />
-              <span>{formZindex}</span>
-            </div>
-          </div>
         </section>
         <section>
           <div>

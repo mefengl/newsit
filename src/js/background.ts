@@ -22,10 +22,16 @@ bc.ListenForAllEnabledChange((isAllEnabled) => {
 })
 bc.ListenForRequestApi((tabId) => {
   onRequestBackgroundHN(tabId)
-    .then((res) => bc.SendEventToTab("result_from_hn", tabId, res))
+    .then((res) => {
+      bc.SendEventToTab("result_from_hn", tabId, res);
+      bc.BroadcastEvent("result_from_hn", { tabId, result: res });
+    })
     .catch((err) => logger.log("!!!! request_hn", err));
   onRequestBackgroundReddit(tabId)
-    .then((res) => bc.SendEventToTab("result_from_reddit", tabId, res))
+    .then((res) => {
+      bc.SendEventToTab("result_from_reddit", tabId, res);
+      bc.BroadcastEvent("result_from_reddit", { tabId, result: res });
+    })
     .catch((err) => logger.log("!!!! request_reddit", err));
 });
 bc.ListenForHostRemove(async (hostToRemove: string) => {

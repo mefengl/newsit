@@ -21,9 +21,14 @@ class BackgroundController {
       return cb(d);
     });
   }
-  ListenForRequestApi(cb: (tabId: number) => void) {
-    MessageApi.onEvent("request_api", async (_, sender) => {
-      return cb(sender.tab.id);
+  ListenForRequestApi(cb: (tabId: number) => Promise<void> | void) {
+    MessageApi.onEvent("request_api", async (data: { tabId?: number }, sender) => {
+      const tabId = data?.tabId ?? sender?.tab?.id;
+      if (typeof tabId !== "number") {
+        logger.log("request_api ignored: no tab id", { data, sender });
+        return;
+      }
+      return cb(tabId);
     });
   }
   ListenTabChange(cb: (tabId: any, tabUrl: any) => Promise<void>) {
@@ -70,6 +75,9 @@ class BackgroundController {
   // Commands
   SendEventToTab(e: MessageChannelType, tabId: number, d?: any) {
     return MessageApi.emitEventToTab(e, tabId, d);
+  }
+  BroadcastEvent(e: MessageChannelType, d?: any) {
+    return MessageApi.emitEvent(e, d);
   }
   SetIconGrey(shouldBeGrey: boolean) {
     const iconPath = shouldBeGrey ? "./img/icon-grey.png" : "./img/icon.png";
